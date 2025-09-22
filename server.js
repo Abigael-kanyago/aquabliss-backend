@@ -1,0 +1,65 @@
+const express = require('express');
+const cors = require('cors');
+const pool = require('./db'); // database connection from db.js
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const PORT = 5000;
+
+// ================== ROUTES ==================
+const orderRoutes = require('./routes/orders');
+app.use('/orders', orderRoutes);
+
+// ✅ ROOT ROUTE (fixes "Cannot GET /")
+app.get('/', (req, res) => {
+  res.send('🚀 AquaBliss API is running... Use /products or /orders');
+});
+
+// ================== TEST ROUTE ==================
+app.get('/test-db', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    res.json({ time: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Database error");
+  }
+});
+
+// ================== PRODUCTS ==================
+
+// Get all products
+app.get('/products', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM products ORDER BY product_id');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching products");
+  }
+});
+
+// Add a new product
+app.post('/products', async (req, res) => {
+  const { name, description, unit_price, stock_quantity } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO products (name, description, unit_price, stock_quantity) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, description, unit_price, stock_quantity]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error adding product");
+  }
+});
+
+// ================== START SERVER ==================
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+
+
+
+
+
