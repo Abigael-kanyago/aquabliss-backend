@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Card, Button, Table, Navbar, Nav } from "react-bootstrap";
 
-// ✅ Receipt component inside the same file for now
+// Receipt component inside the same file for now
 const Receipt = ({ order, onClose }) => {
   React.useEffect(() => {
     window.print();   // Auto print
@@ -44,7 +44,7 @@ function App() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [transactionCode, setTransactionCode] = useState("");
-  const [lastOrder, setLastOrder] = useState(null); // ✅ store order for receipt
+  const [lastOrder, setLastOrder] = useState(null); //  store order for receipt
 
   // Product list
   const products = [
@@ -86,36 +86,38 @@ function App() {
     0
   );
 
-  // ✅ Checkout Handler
-  const handleCheckout = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_name: customerName || "Walk-in Customer",
-          customer_phone: customerPhone || null,
-          items: cart.map((item) => ({
-            product_id: item.id,
-            name: item.name,   // include for receipt
-            price: item.price, // include for receipt
-            quantity: item.quantity,
-          })),
-          paymentMethod,
-          transactionCode: paymentMethod === "Mpesa" ? transactionCode : null,
-        }),
-      });
+  //  Checkout Handler
+const handleCheckout = async () => {
+  try {
+    const API_BASE = process.env.REACT_APP_API_URL; // 🔑 dynamic base URL
 
-      const data = await response.json();
+    const response = await fetch(`${API_BASE}/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customer_name: customerName || "Walk-in Customer",
+        customer_phone: customerPhone || null,
+        items: cart.map((item) => ({
+          product_id: item.id,
+          name: item.name,   // include for receipt
+          price: item.price, // include for receipt
+          quantity: item.quantity,
+        })),
+        paymentMethod,
+        transactionCode: paymentMethod === "Mpesa" ? transactionCode : null,
+      }),
+    });
 
-      if (!response.ok) {
-        alert("Error: " + data.error);
-        return;
-      }
+    const data = await response.json();
 
-      const orderId = data.orderId;
+    if (!response.ok) {
+      alert("Error: " + data.error);
+      return;
+    }
 
-      // ✅ Save for small receipt print
+    const orderId = data.orderId;
+
+      //  Save for small receipt print
       setLastOrder({
         orderId,
         customer_name: customerName || "Walk-in Customer",
@@ -125,20 +127,21 @@ function App() {
         total,
       });
 
-      // ✅ Still open PDF for business records
-      window.open(`http://localhost:5000/orders/${orderId}/receipt`, "_blank");
+      //  Open receipt directly from backend
+    window.open(`${API_BASE}/orders/${orderId}/receipt`, "_blank");
 
-      // Reset form
-      setCart([]);
-      setCustomerName("");
-      setCustomerPhone("");
-      setPaymentMethod("Cash");
-      setTransactionCode("");
-    } catch (err) {
-      console.error("Checkout failed:", err);
-      alert("Something went wrong during checkout.");
-    }
-  };
+    // Reset form
+    setCart([]);
+    setCustomerName("");
+    setCustomerPhone("");
+    setPaymentMethod("Cash");
+    setTransactionCode("");
+
+  } catch (error) {
+    console.error(" Checkout failed:", error);
+    alert("Something went wrong during checkout.");
+  }
+};
 
   return (
     <>
