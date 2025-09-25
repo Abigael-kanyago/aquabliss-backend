@@ -3,7 +3,13 @@ const cors = require('cors');
 const pool = require('./db'); // database connection from db.js
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "https://aquabliss-frontend.vercel.app",  // your Vercel frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"]
+}));
+
+
 app.use(express.json());
 
 
