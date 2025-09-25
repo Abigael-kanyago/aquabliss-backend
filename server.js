@@ -3,16 +3,27 @@ const cors = require('cors');
 const pool = require('./db'); // database connection from db.js
 
 const app = express();
+
+// ✅ CORS setup: allow your deployed frontend + localhost for dev
+const allowedOrigins = [
+  "https://aquabliss-frontend.vercel.app", // Vercel frontend
+  "http://localhost:5173",                 // Vite dev
+  "http://localhost:3000"                  // CRA dev
+];
+
 app.use(cors({
-  origin: "https://aquabliss-frontend.vercel.app",  // your Vercel frontend URL
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type"]
 }));
 
-
 app.use(express.json());
-
-
 
 // ================== ROUTES ==================
 const orderRoutes = require('./routes/orders');
@@ -63,8 +74,9 @@ app.post('/products', async (req, res) => {
 });
 
 // ================== START SERVER ==================
-const PORT  = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
 
 
 
